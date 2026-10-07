@@ -1,22 +1,24 @@
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
-"Indicates what fields are available at the top level of a query operation."
+"Root queries for the micro-blog API."
 type Query {
-    "Find a single user by an identifying attribute."
-    user(
-      "Search by primary key."
-      id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+    "Fetch a user by username, including their profile info and posts."
+    userProfile(
+        username: String! @eq
+    ): User @find(model: "App\\Models\\User")
 
-      "Search by email address."
-      email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
-    ): User @find
+    "Global feed of posts across the platform (paginated)."
+    globalFeed: [Post!]! @paginate(type: "PAGINATOR", model: "App\\Models\\Post", defaultCount: 10)
+}
 
-    "List multiple users."
-    users(
-      "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
-      name: String @where(operator: "like")
-    ): [User!]! @paginate(defaultCount: 10)
+"Mutations for creating and updating resources."
+type Mutation {
+    "Create a new micro-blog post for a user."
+    createPost(
+        user_id: ID! @rules(apply: ["exists:users,id"])
+        body: String! @rules(apply: ["max:280"])
+    ): Post @create(model: "App\\Models\\Post")
 }
 
 "Account of a person who uses this application."
@@ -24,11 +26,17 @@ type User {
     "Unique primary key."
     id: ID!
 
-    "Non-unique name."
+    "Display name."
     name: String!
+
+    "Unique username used in profile URLs."
+    username: String!
 
     "Unique email address."
     email: String!
+
+    "Posts authored by this user."
+    posts: [Post!]! @hasMany
 
     "When the email was verified."
     email_verified_at: DateTime
@@ -37,5 +45,23 @@ type User {
     created_at: DateTime!
 
     "When the account was last updated."
+    updated_at: DateTime!
+}
+
+"A short micro-blog post."
+type Post {
+    "Unique primary key."
+    id: ID!
+
+    "The textual content of the post (max 280 characters)."
+    body: String!
+
+    "The author of this post."
+    user: User! @belongsTo
+
+    "When the post was created."
+    created_at: DateTime!
+
+    "When the post was last updated."
     updated_at: DateTime!
 }
