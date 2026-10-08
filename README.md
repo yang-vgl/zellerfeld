@@ -102,3 +102,17 @@ curl -X POST http://localhost:8001/graphql \
   -d '{"query":"mutation CreatePost { createPost(userId: 1, body: \"Hello from GraphQL!\") { id body createdAt user { id username } } }"}'
 ```
 
+### If the `posts` table grew past a million rows:
+
+**Database level**
+
+- proper index: single index, combined index
+- Mysql partitioning: limitation is the query condition must hit the same field as the partitioning field
+
+**Laravel / application level**
+- some optimization like eager loading, cache, rate limiting etc, but this is not much of an application level problem.
+
+**My solution**
+- use full text search option like Elasticsearch for searching queries, 
+ update query is not a problem, can still happen on mysql, then sync to Elasticsearch.
+  Algolia has more features and good UX, but cost more.
