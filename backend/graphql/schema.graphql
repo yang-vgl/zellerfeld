@@ -9,7 +9,11 @@ type Query {
     ): User @find(model: "App\\Models\\User")
 
     "Global feed of posts across the platform (paginated)."
-    globalFeed: [Post!]! @paginate(type: "PAGINATOR", model: "App\\Models\\Post", defaultCount: 10)
+    globalFeed: [Post!]! @paginate(
+        type: "PAGINATOR",
+        defaultCount: 10,
+        builder: "App\\GraphQL\\Queries\\PostQuery@resolveGlobalFeed"
+    )
 }
 
 "Mutations for creating and updating resources."
