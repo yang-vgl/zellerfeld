@@ -19,7 +19,7 @@ class UserProfileQueryTest extends TestCase
                 'username' => 'testuser',
             ]);
 
-        $query = <<<'GRAPHQL'
+        $response = $this->graphQL(/** @lang GraphQL */ <<<'GRAPHQL'
         {
           userProfile(username: "testuser") {
             id
@@ -28,17 +28,11 @@ class UserProfileQueryTest extends TestCase
             posts {
               id
               body
-              created_at
+              createdAt
             }
           }
         }
-        GRAPHQL;
-
-        $response = $this->postJson('/graphql', [
-            'query' => $query,
-        ]);
-
-        $response->assertStatus(200);
+        GRAPHQL)->assertGraphQLErrorFree();
 
         $response->assertJsonPath('data.userProfile.id', (string) $user->id);
         $response->assertJsonPath('data.userProfile.username', 'testuser');

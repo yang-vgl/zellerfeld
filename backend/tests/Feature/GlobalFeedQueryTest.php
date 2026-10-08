@@ -19,13 +19,13 @@ class GlobalFeedQueryTest extends TestCase
             ->for(User::factory(), 'user')
             ->create();
 
-        $query = <<<'GRAPHQL'
+        $response = $this->graphQL(/** @lang GraphQL */ <<<'GRAPHQL'
         {
           globalFeed(first: 10, page: 1) {
             data {
               id
               body
-              created_at
+              createdAt
               user {
                 id
                 username
@@ -38,13 +38,7 @@ class GlobalFeedQueryTest extends TestCase
             }
           }
         }
-        GRAPHQL;
-
-        $response = $this->postJson('/graphql', [
-            'query' => $query,
-        ]);
-
-        $response->assertStatus(200);
+        GRAPHQL)->assertGraphQLErrorFree();
 
         // We should get 10 items on the first page
         $this->assertCount(10, $response->json('data.globalFeed.data'));

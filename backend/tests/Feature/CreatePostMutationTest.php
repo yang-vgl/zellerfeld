@@ -14,9 +14,9 @@ class CreatePostMutationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $mutation = <<<'GRAPHQL'
-        mutation CreatePost($user_id: ID!, $body: String!) {
-          createPost(user_id: $user_id, body: $body) {
+        $mutation = /** @lang GraphQL */ <<<'GRAPHQL'
+        mutation CreatePost($userId: ID!, $body: String!) {
+          createPost(userId: $userId, body: $body) {
             id
             body
             user {
@@ -27,15 +27,11 @@ class CreatePostMutationTest extends TestCase
         }
         GRAPHQL;
 
-        $response = $this->postJson('/graphql', [
-            'query' => $mutation,
-            'variables' => [
-                'user_id' => $user->id,
-                'body' => 'Hello from a test mutation',
-            ],
-        ]);
+        $response = $this->graphQL($mutation, [
+            'userId' => $user->id,
+            'body' => 'Hello from a test mutation',
+        ])->assertGraphQLErrorFree();
 
-        $response->assertStatus(200);
         $response->assertJsonPath('data.createPost.body', 'Hello from a test mutation');
         $response->assertJsonPath('data.createPost.user.id', (string) $user->id);
 
@@ -49,26 +45,20 @@ class CreatePostMutationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $mutation = <<<'GRAPHQL'
-        mutation CreatePost($user_id: ID!, $body: String!) {
-          createPost(user_id: $user_id, body: $body) {
+        $mutation = /** @lang GraphQL */ <<<'GRAPHQL'
+        mutation CreatePost($userId: ID!, $body: String!) {
+          createPost(userId: $userId, body: $body) {
             id
           }
         }
         GRAPHQL;
 
-        $tooLong = str_repeat('a', 300);
-
-        $response = $this->postJson('/graphql', [
-            'query' => $mutation,
-            'variables' => [
-                'user_id' => $user->id,
-                'body' => $tooLong,
-            ],
+        $response = $this->graphQL($mutation, [
+            'userId' => $user->id,
+            'body' => str_repeat('a', 300),
         ]);
 
-        $response->assertStatus(200);
-        $response->assertJsonStructure(['errors']);
+        $response->assertGraphQLValidationKeys(['body']);
         $this->assertDatabaseCount('posts', 0);
     }
 }
